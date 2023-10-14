@@ -9,3 +9,4 @@ repository = "https://github.com/loshz/metrics_server"
 license = "MIT"
 
 [dependencies]
+anyhow = "1.0"
