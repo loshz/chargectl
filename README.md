@@ -1,7 +1,8 @@
 # chargectl
+Linux daemon for managing charge thresholds on modern laptop machines.
 
 ## Usage
-```bash
+```
 $ chargectl --help
 Linux daemon for managing charge thresholds on modern laptop machines.
 
@@ -15,3 +16,6 @@ Options:
   -h, --help     Print help
   -V, --version  Print version
 ```
+
+### systemd
+An example service unit can be found [here](./extra/chargectl.service). You may need to modify the `ExecStart` path depending on your installation configuration.

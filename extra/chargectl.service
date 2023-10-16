@@ -1,0 +1,10 @@
+[Unit]
+Description=Set battery charge thresholds
+
+[Service]
+Type=oneshot
+ExecStart=/bin/chargectl threshold 75 100
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
