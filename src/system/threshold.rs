@@ -1,20 +1,16 @@
 use std::fs::OpenOptions;
-use std::io::Write;
+use std::io::{ErrorKind, Write};
 use std::str;
 
 use anyhow::{anyhow, Context, Error};
 
-use crate::error;
-
-pub fn set(start: u8, stop: u8) -> Result<(), Error> {
+pub fn set_threshold(start: u8, stop: u8) -> Result<(), Error> {
     if start > 100 || stop > 100 {
-        return Err(anyhow!(error::ERR_INVALID_THRESHOLD));
+        return Err(anyhow!("thresholds must be valid numbers between 0-100"));
     }
 
     if start >= stop {
-        return Err(anyhow!(
-            "Error: start threshold must be less than stop threshold"
-        ));
+        return Err(anyhow!("start threshold must be lower than stop threshold"));
     }
 
     // Set start thresholds.
@@ -40,12 +36,18 @@ pub fn set(start: u8, stop: u8) -> Result<(), Error> {
 }
 
 fn write_threshold(path: &str, threshold: u8) -> Result<(), Error> {
-    let mut f = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(path)
-        .with_context(|| format!("Failed to open {}", path))?;
+    let mut f = match OpenOptions::new().write(true).truncate(true).open(path) {
+        Ok(file) => file,
+        Err(error) => match error.kind() {
+            ErrorKind::PermissionDenied => {
+                return Err(anyhow!(
+                    "permission denied, try running the same command with sudo privileges"
+                ))
+            }
+            _ => return Err(anyhow!(format!("failed to open {}", path))),
+        },
+    };
 
-    write!(f, "{}", threshold).context("Failed to write threshold")?;
+    write!(f, "{}", threshold).context("failed to write threshold")?;
     Ok(())
 }
