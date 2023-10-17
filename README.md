@@ -1,4 +1,5 @@
 # chargectl
+[![Build Status](https://github.com/loshz/chargectl/workflows/ci/badge.svg)](https://github.com/loshz/chargectl/actions) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 Linux daemon for managing charge thresholds on modern laptop machines.
 
 ## Usage
