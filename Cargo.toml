@@ -5,7 +5,7 @@ authors = ["Dan Bond <danbond@protonmail.com>"]
 description = "Linux daemon for managing charge thresholds on modern laptop machines"
 rust-version = "1.72"
 edition = "2021"
-repository = "https://github.com/loshz/metrics_server"
+repository = "https://github.com/loshz/chargectl"
 license = "MIT"
 
 [dependencies]
