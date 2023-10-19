@@ -7,11 +7,14 @@ use anyhow::{anyhow, Context, Error};
 
 // Power supply class used to represent battery in sysfs.
 // Ref: https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
-const SYSFS_CLASS_POWER: &str = "/sys/class/power_supply/BAT0/";
+const SYSFS_CLASS_POWER: &str = "/sys/class/power_supply/";
+
+// Default inbuilt batter indicator.
+const DEFAULT_BATTERY: &str = "BAT0";
 
 // Sets the start and stop battery charge thresholds in sysfs.
 // TODO: allow passing different battery specifiers?
-pub fn set_threshold(start: u8, stop: u8) -> Result<(), Error> {
+pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> {
     // Simple sanity check for valid threshold values.
     // The kernel will also enforce these values, but it's a simple check for us to do.
     if start > 100 || stop > 100 {
@@ -25,21 +28,28 @@ pub fn set_threshold(start: u8, stop: u8) -> Result<(), Error> {
 
     // Generic check for platform support.
     // TODO: could this be better?
-    if !Path::new(SYSFS_CLASS_POWER).exists() {
+    let sysfs = Path::new(SYSFS_CLASS_POWER);
+    if !sysfs.exists() {
         return Err(anyhow!("unsupported platform"));
     }
 
+    // Set battery default if not specified.
+    let bat: String = match battery {
+        Some(b) => b,
+        None => DEFAULT_BATTERY.to_string(),
+    };
+
+    // Check if the battery exists.
+    let sysfs_bat = sysfs.join(bat);
+    if !sysfs_bat.exists() {
+        return Err(anyhow!("battery not present"));
+    }
+
     // Set start thresholds.
-    write_threshold(
-        Path::new(SYSFS_CLASS_POWER).join("charge_control_start_threshold"),
-        start,
-    )?;
+    write_threshold(sysfs_bat.join("charge_control_start_threshold"), start)?;
 
     // Set stop thresholds.
-    write_threshold(
-        Path::new(SYSFS_CLASS_POWER).join("charge_control_end_threshold"),
-        stop,
-    )?;
+    write_threshold(sysfs_bat.join("charge_control_end_threshold"), stop)?;
 
     if start == 0 {
         println!("Battery will start charging immediately and stop charing at {stop}%");

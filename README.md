@@ -1,7 +1,7 @@
 # chargectl
 [![Build Status](https://github.com/loshz/chargectl/workflows/ci/badge.svg)](https://github.com/loshz/chargectl/actions) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Linux daemon for managing charge thresholds on modern laptop machines.
+Linux daemon for managing charge thresholds on modern laptop machines. Inspired by [TLP](https://linrunner.de/tlp/).
 
 ## Usage
 ```
@@ -11,7 +11,7 @@ Linux daemon for managing charge thresholds on modern laptop machines.
 Usage: chargectl <COMMAND>
 
 Commands:
-  set         Set start and stop charge thresholds
+  setcharge   Set start and stop charge thresholds
   fullcharge  Set threshold to enable immediate charging until full
 
 Options:

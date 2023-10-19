@@ -3,7 +3,7 @@ Description=Set battery charge thresholds
 
 [Service]
 Type=oneshot
-ExecStart=/bin/chargectl set 75 80
+ExecStart=/bin/chargectl setcharge 75 80
 RemainAfterExit=true
 
 [Install]

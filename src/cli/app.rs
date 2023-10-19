@@ -13,9 +13,9 @@ pub struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Set start and stop charge thresholds
-    Set(Thresholds),
+    Setcharge(Thresholds),
     /// Set threshold to enable immediate charging until full
-    Fullcharge,
+    Fullcharge(Battery),
 }
 
 #[derive(Args)]
@@ -26,13 +26,23 @@ struct Thresholds {
 
     /// Battery charge percentage above which charging will stop
     stop: u8,
+
+    /// Battery to set charge thresholds on
+    battery: Option<String>,
+}
+
+#[derive(Args)]
+#[command(disable_version_flag = true)]
+struct Battery {
+    /// Battery to fully charge
+    battery: Option<String>,
 }
 
 impl Cli {
     pub fn run(self) -> Result<(), Error> {
         match self.command {
-            Commands::Set(threshold) => system::set_threshold(threshold.start, threshold.stop),
-            Commands::Fullcharge => system::set_threshold(0, 100),
+            Commands::Setcharge(args) => system::set_threshold(args.start, args.stop, args.battery),
+            Commands::Fullcharge(args) => system::set_threshold(0, 100, args.battery),
         }
     }
 }
