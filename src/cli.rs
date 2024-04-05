@@ -1,11 +1,11 @@
 use anyhow::Error;
 use clap::{Args, Parser, Subcommand};
 
-use crate::system;
+use crate::{daemon, sysfs};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None, propagate_version = true, disable_help_subcommand = true)]
-pub struct Cli {
+pub struct App {
     #[command(subcommand)]
     command: Commands,
 }
@@ -13,9 +13,13 @@ pub struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Set start and stop charge thresholds
-    Setcharge(Thresholds),
+    Set(Thresholds),
+
     /// Set threshold to enable immediate charging until full
-    Fullcharge(Battery),
+    Full(Battery),
+
+    /// Run as a dameon, periodically resetting charge thresholds
+    Start(Thresholds),
 }
 
 #[derive(Args)]
@@ -38,11 +42,12 @@ struct Battery {
     battery: Option<String>,
 }
 
-impl Cli {
+impl App {
     pub fn run(self) -> Result<(), Error> {
         match self.command {
-            Commands::Setcharge(args) => system::set_threshold(args.start, args.stop, args.battery),
-            Commands::Fullcharge(args) => system::set_threshold(0, 100, args.battery),
+            Commands::Set(args) => sysfs::set_threshold(args.start, args.stop, args.battery),
+            Commands::Full(args) => sysfs::set_threshold(96, 100, args.battery),
+            Commands::Start(args) => daemon::start(args.start, args.stop, args.battery),
         }
     }
 }

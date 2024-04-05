@@ -11,8 +11,9 @@ Linux daemon for managing charge thresholds on modern laptop machines.
 Usage: chargectl <COMMAND>
 
 Commands:
-  setcharge   Set start and stop charge thresholds
-  fullcharge  Set threshold to enable immediate charging until full
+  set    Set start and stop charge thresholds
+  full   Set threshold to enable immediate charging until full
+  start  Run as a dameon, periodically resetting charge thresholds
 
 Options:
   -h, --help     Print help
