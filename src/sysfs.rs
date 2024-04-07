@@ -1,8 +1,8 @@
 use std::fs::OpenOptions;
-use std::io::{ErrorKind, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, Error};
+use crate::error::Error;
 
 // Class used to represent power supply in sysfs.
 // REF: https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
@@ -33,7 +33,7 @@ pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(),
 
     // Generic check for platform support.
     if !platform_supported() {
-        return Err(anyhow!("unsupported platform"));
+        return Err(Error::Unsupported);
     }
 
     // Set battery default if not specified.
@@ -78,10 +78,11 @@ pub fn validate_thresholds(start: u8, stop: u8) -> Result<(), Error> {
 pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
     // Attempt to open the file in write mode while truncating any existing data.
     // This will fail if the file does not already exist.
-    let mut f = match OpenOptions::new().write(true).truncate(true).open(path) {
-        Ok(file) => file,
-        Err(err) => return Err(io_error_context(err)),
-    };
+    let mut f = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(path)
+        .map_err(|err| Error::IO(err))?;
 
     // Attempt to write the charge threshold.
     if let Err(e) = write!(f, "{}", threshold) {
@@ -101,21 +102,6 @@ pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
 
 //     Ok(())
 // }
-
-// Parse a given io::Error and return an error with context.
-fn io_error_context(err: std::io::Error) -> Error {
-    match err.kind() {
-        // Usually fixed by running sudo.
-        ErrorKind::PermissionDenied => {
-            anyhow!("permission denied, try running the same command with sudo privileges")
-        }
-        // If we already know that the power supply class in sysfs exists, then this file
-        // _should_ exist.
-        ErrorKind::NotFound => anyhow!("unsupported platform"),
-        // Generic catch-all error.
-        _ => anyhow!("failed to write charge threshold: {err}"),
-    }
-}
 
 #[cfg(test)]
 mod tests {
