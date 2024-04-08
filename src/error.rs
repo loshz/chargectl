@@ -4,6 +4,7 @@ use std::io::ErrorKind;
 // Wrapped operation errors.
 #[derive(Debug)]
 pub enum Error {
+    Battery(String),
     IO(std::io::Error),
     Unsupported,
     Threshold,
@@ -12,6 +13,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Error::Battery(bat) => write!(f, "battery not found: {bat}"),
             Error::IO(err) => {
                 match err.kind() {
                     // Usually fixed by running sudo.
@@ -29,6 +31,7 @@ impl fmt::Display for Error {
                 }
             }
             Error::Unsupported => write!(f, "unsupported platform"),
+            Error::Threshold => write!(f, "thresholds must be numerical [0-100], and start < stop"),
         }
     }
 }

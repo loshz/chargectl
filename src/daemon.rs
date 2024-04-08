@@ -1,16 +1,12 @@
 // use std::{thread, time};
 
-use anyhow::{anyhow, Error};
-
+use crate::error::Error;
 use crate::sysfs;
 
 pub fn start(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> {
+    // Generic check for platform support and validate thresholds.
+    sysfs::is_platform_supported()?;
     sysfs::validate_thresholds(start, stop)?;
-
-    // Generic check for platform support.
-    if !sysfs::platform_supported() {
-        return Err(anyhow!("unsupported platform"));
-    }
 
     // Set battery default if not specified.
     let bat: String = match battery {

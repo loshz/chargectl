@@ -9,5 +9,4 @@ repository = "https://github.com/loshz/chargectl"
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0"
 clap = { version = "4.4", default-features = false, features = ["std", "derive", "help", "usage", "error-context"] }

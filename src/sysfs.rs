@@ -13,15 +13,19 @@ pub const DEFAULT_BATTERY: &str = "BAT0";
 
 // General check to determine if the current OS is supported.
 // TODO: could this be better?
-pub fn platform_supported() -> bool {
-    Path::new(SYSFS_CLASS_POWER).exists()
+pub fn is_platform_supported() -> Result<(), Error> {
+    if !Path::new(SYSFS_CLASS_POWER).exists() {
+        return Err(Error::Unsupported);
+    }
+
+    Ok(())
 }
 
 // Construct a sysfs path from a given battery.
 pub fn battery_path(bat: String) -> Result<PathBuf, Error> {
-    let sysfs_bat = Path::new(SYSFS_CLASS_POWER).join(bat);
+    let sysfs_bat = Path::new(SYSFS_CLASS_POWER).join(bat.clone());
     if !sysfs_bat.exists() {
-        return Err(anyhow!("battery not present"));
+        return Err(Error::Battery(bat));
     }
 
     Ok(sysfs_bat)
@@ -32,9 +36,7 @@ pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(),
     validate_thresholds(start, stop)?;
 
     // Generic check for platform support.
-    if !platform_supported() {
-        return Err(Error::Unsupported);
-    }
+    is_platform_supported()?;
 
     // Set battery default if not specified.
     let bat: String = match battery {
@@ -62,13 +64,8 @@ pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(),
 pub fn validate_thresholds(start: u8, stop: u8) -> Result<(), Error> {
     // Simple sanity check for valid threshold values.
     // The kernel will also enforce these values, but it's a simple check for us to do.
-    if start > 100 || stop > 100 {
-        return Err(anyhow!("thresholds must be valid numbers between 0-100"));
-    }
-
-    // Check that the start threshold is lower than the stop threshold.
-    if start >= stop {
-        return Err(anyhow!("start threshold must be lower than stop threshold"));
+    if start > 100 || stop > 100 || start >= stop {
+        return Err(Error::Threshold);
     }
 
     Ok(())
@@ -82,11 +79,11 @@ pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
         .write(true)
         .truncate(true)
         .open(path)
-        .map_err(|err| Error::IO(err))?;
+        .map_err(Error::IO)?;
 
     // Attempt to write the charge threshold.
-    if let Err(e) = write!(f, "{}", threshold) {
-        return Err(anyhow!("failed to write charge threshold: {e}"));
+    if let Err(err) = write!(f, "{}", threshold) {
+        return Err(Error::IO(err));
     }
 
     Ok(())
