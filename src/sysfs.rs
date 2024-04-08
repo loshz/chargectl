@@ -22,7 +22,13 @@ pub fn is_platform_supported() -> Result<(), Error> {
 }
 
 // Construct a sysfs path from a given battery.
-pub fn battery_path(bat: String) -> Result<PathBuf, Error> {
+pub fn get_battery_path(battery: Option<String>) -> Result<PathBuf, Error> {
+    // Set battery default if not specified.
+    let bat: String = match battery {
+        Some(b) => b.to_uppercase(),
+        None => DEFAULT_BATTERY.to_string(),
+    };
+
     let sysfs_bat = Path::new(SYSFS_CLASS_POWER).join(bat.clone());
     if !sysfs_bat.exists() {
         return Err(Error::Battery(bat));
@@ -33,19 +39,12 @@ pub fn battery_path(bat: String) -> Result<PathBuf, Error> {
 
 // Sets the start and stop battery charge thresholds in sysfs.
 pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> {
+    // Generic check for platform support and valid thresholds.
+    is_platform_supported()?;
     validate_thresholds(start, stop)?;
 
-    // Generic check for platform support.
-    is_platform_supported()?;
-
-    // Set battery default if not specified.
-    let bat: String = match battery {
-        Some(b) => b.to_uppercase(),
-        None => DEFAULT_BATTERY.to_string(),
-    };
-
     // Get sysfs path from given battery.
-    let sysfs_bat = battery_path(bat)?;
+    let sysfs_bat = get_battery_path(battery)?;
 
     // Set start and stop thresholds.
     write_threshold(sysfs_bat.join("charge_control_start_threshold"), start)?;
@@ -82,10 +81,7 @@ pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
         .map_err(Error::IO)?;
 
     // Attempt to write the charge threshold.
-    if let Err(err) = write!(f, "{}", threshold) {
-        return Err(Error::IO(err));
-    }
-
+    write!(f, "{}", threshold).map_err(Error::IO)?;
     Ok(())
 }
 

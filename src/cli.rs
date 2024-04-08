@@ -1,6 +1,8 @@
 use clap::{Args, Parser, Subcommand};
 
-use crate::{daemon, error::Error, sysfs};
+use crate::daemon;
+use crate::error::Error;
+use crate::sysfs;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None, propagate_version = true, disable_help_subcommand = true)]
