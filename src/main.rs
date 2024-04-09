@@ -8,7 +8,7 @@ mod error;
 mod sysfs;
 
 fn main() {
-    let cli = cli::App::parse();
+    let cli = cli::Chargectl::parse();
 
     if let Err(e) = cli.run() {
         eprintln!("Error: {e}");

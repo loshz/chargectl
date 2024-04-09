@@ -1,5 +1,5 @@
 use std::fs::OpenOptions;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use crate::error::Error;
@@ -42,7 +42,7 @@ pub fn get_battery_path(battery: Option<String>) -> Result<PathBuf, Error> {
 }
 
 // Sets the start and stop battery charge thresholds in sysfs.
-pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> {
+pub fn set_thresholds(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> {
     // Generic check for platform support and valid thresholds.
     is_platform_supported()?;
     validate_thresholds(start, stop)?;
@@ -59,6 +59,23 @@ pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(),
     } else {
         println!("Battery will start charging below {start}% and stop charing at {stop}%");
     };
+
+    Ok(())
+}
+
+// Sets the start and stop battery charge thresholds in sysfs.
+pub fn get_thresholds(battery: Option<String>) -> Result<(), Error> {
+    // Generic check for platform support and valid thresholds.
+    is_platform_supported()?;
+
+    // Get sysfs path from given battery.
+    let sysfs_bat = get_battery_path(battery)?;
+
+    // Get start and stop thresholds.
+    let start = read_threshold(sysfs_bat.join(THRESHOLD_START))?;
+    let stop = read_threshold(sysfs_bat.join(THRESHOLD_STOP))?;
+
+    println!("Start: {start}, Stop: {stop}");
 
     Ok(())
 }
@@ -89,16 +106,18 @@ pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
     Ok(())
 }
 
-// pub fn get_threshold(path: PathBuf) -> Result<(), Error> {
-//     let f = match OpenOptions::new().write(false).read(true).open(path) {
-//         Ok(file) => file,
-//         Err(err) => return Err(io_error_context(err)),
-//     };
+pub fn read_threshold(path: PathBuf) -> Result<String, Error> {
+    let mut f = OpenOptions::new()
+        .write(false)
+        .read(true)
+        .open(path)
+        .map_err(Error::IO)?;
 
-//     // TODO: parse file content.
+    let mut buf = String::new();
+    f.read_to_string(&mut buf).map_err(Error::IO)?;
 
-//     Ok(())
-// }
+    Ok(buf)
+}
 
 #[cfg(test)]
 mod tests {

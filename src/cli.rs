@@ -6,14 +6,17 @@ use crate::sysfs;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None, propagate_version = true, disable_help_subcommand = true)]
-pub struct App {
+pub struct Chargectl {
     #[command(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Set start and stop charge thresholds
+    /// Get the current start and stop thresholds for a given battery
+    Get(Battery),
+
+    /// Set start and stop charge thresholds for a given battery
     Set(Thresholds),
 
     /// Set threshold to enable immediate charging until full
@@ -43,11 +46,12 @@ struct Battery {
     battery: Option<String>,
 }
 
-impl App {
+impl Chargectl {
     pub fn run(self) -> Result<(), Error> {
         match self.command {
-            Commands::Set(args) => sysfs::set_threshold(args.start, args.stop, args.battery),
-            Commands::Full(args) => sysfs::set_threshold(96, 100, args.battery),
+            Commands::Get(args) => sysfs::get_thresholds(args.battery),
+            Commands::Set(args) => sysfs::set_thresholds(args.start, args.stop, args.battery),
+            Commands::Full(args) => sysfs::set_thresholds(96, 100, args.battery),
             Commands::Start(args) => daemon::start(args.start, args.stop, args.battery),
         }
     }
