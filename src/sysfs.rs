@@ -9,7 +9,11 @@ use crate::error::Error;
 pub const SYSFS_CLASS_POWER: &str = "/sys/class/power_supply/";
 
 // Default inbuilt batter indicator.
-pub const DEFAULT_BATTERY: &str = "BAT0";
+const DEFAULT_BATTERY: &str = "BAT0";
+
+// Start and stop threshold sysfs files.
+pub const THRESHOLD_START: &str = "charge_control_start_threshold";
+pub const THRESHOLD_STOP: &str = "charge_control_end_threshold";
 
 // General check to determine if the current OS is supported.
 // TODO: could this be better?
@@ -47,8 +51,8 @@ pub fn set_threshold(start: u8, stop: u8, battery: Option<String>) -> Result<(),
     let sysfs_bat = get_battery_path(battery)?;
 
     // Set start and stop thresholds.
-    write_threshold(sysfs_bat.join("charge_control_start_threshold"), start)?;
-    write_threshold(sysfs_bat.join("charge_control_end_threshold"), stop)?;
+    write_threshold(sysfs_bat.join(THRESHOLD_START), start)?;
+    write_threshold(sysfs_bat.join(THRESHOLD_STOP), stop)?;
 
     if start == 0 {
         println!("Battery will start charging immediately and stop charing at {stop}%");

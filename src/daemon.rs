@@ -12,24 +12,28 @@ pub fn start(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> 
 
     // Get sysfs path from given battery.
     let sysfs_bat = sysfs::get_battery_path(battery)?;
-    println!("{:?}", sysfs_bat);
 
     // Register stop handler.
-    let stop = Arc::new(AtomicBool::new(false));
-    let s = stop.clone();
+    let stopping = Arc::new(AtomicBool::new(false));
+    let s = stopping.clone();
     ctrlc::set_handler(move || {
         s.store(true, Ordering::Relaxed);
     })
     .unwrap();
 
     loop {
-        if stop.load(Ordering::Relaxed) {
+        if stopping.load(Ordering::Relaxed) {
             break;
         }
 
-        // Only exit if finished writing threshold?
-        thread::sleep(time::Duration::from_secs(1));
-        println!("polling");
+        // Attempt to write start/stop thresholds.
+        // TODO: This currently exists on error, do we want to add retries?
+        sysfs::write_threshold(sysfs_bat.join(sysfs::THRESHOLD_START), start)?;
+        sysfs::write_threshold(sysfs_bat.join(sysfs::THRESHOLD_STOP), stop)?;
+
+        // Sleep until the next cycle.
+        // TODO: make this interval customizable.
+        thread::sleep(time::Duration::from_secs(30));
     }
 
     Ok(())
