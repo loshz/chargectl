@@ -1,3 +1,5 @@
+use std::ffi::OsString;
+
 use clap::{Args, Parser, Subcommand};
 
 use crate::daemon;
@@ -36,14 +38,14 @@ struct Thresholds {
     stop: u8,
 
     /// Battery to set charge thresholds on
-    battery: Option<String>,
+    battery: Option<OsString>,
 }
 
 #[derive(Args)]
 #[command(disable_version_flag = true)]
 struct Battery {
-    /// Battery to fully charge
-    battery: Option<String>,
+    /// Battery to charge
+    battery: Option<OsString>,
 }
 
 impl Chargectl {

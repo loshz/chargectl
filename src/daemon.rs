@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{thread, time};
@@ -5,7 +6,7 @@ use std::{thread, time};
 use crate::error::Error;
 use crate::sysfs;
 
-pub fn start(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> {
+pub fn start(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), Error> {
     // Generic check for platform support and valid thresholds.
     sysfs::is_platform_supported()?;
     sysfs::validate_thresholds(start, stop)?;

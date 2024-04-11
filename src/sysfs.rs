@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -6,7 +7,7 @@ use crate::error::Error;
 
 // Class used to represent power supply in sysfs.
 // REF: https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
-pub const SYSFS_CLASS_POWER: &str = "/sys/class/power_supply/";
+pub const CLASS_POWER_SUPPLY: &str = "/sys/class/power_supply/";
 
 // Default inbuilt batter indicator.
 const DEFAULT_BATTERY: &str = "BAT0";
@@ -18,7 +19,7 @@ pub const THRESHOLD_STOP: &str = "charge_control_end_threshold";
 // General check to determine if the current OS is supported.
 // TODO: could this be better?
 pub fn is_platform_supported() -> Result<(), Error> {
-    if !Path::new(SYSFS_CLASS_POWER).exists() {
+    if !Path::new(CLASS_POWER_SUPPLY).exists() {
         return Err(Error::Unsupported);
     }
 
@@ -26,14 +27,14 @@ pub fn is_platform_supported() -> Result<(), Error> {
 }
 
 // Construct a sysfs path from a given battery.
-pub fn get_battery_path(battery: Option<String>) -> Result<PathBuf, Error> {
+pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, Error> {
     // Set battery default if not specified.
-    let bat: String = match battery {
-        Some(b) => b.to_uppercase(),
-        None => DEFAULT_BATTERY.to_string(),
+    let bat: OsString = match battery {
+        Some(b) => b.to_ascii_uppercase(),
+        None => DEFAULT_BATTERY.into(),
     };
 
-    let sysfs_bat = Path::new(SYSFS_CLASS_POWER).join(bat.clone());
+    let sysfs_bat = Path::new(CLASS_POWER_SUPPLY).join(bat.clone());
     if !sysfs_bat.exists() {
         return Err(Error::Battery(bat));
     }
@@ -42,7 +43,7 @@ pub fn get_battery_path(battery: Option<String>) -> Result<PathBuf, Error> {
 }
 
 // Sets the start and stop battery charge thresholds in sysfs.
-pub fn set_thresholds(start: u8, stop: u8, battery: Option<String>) -> Result<(), Error> {
+pub fn set_thresholds(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), Error> {
     // Generic check for platform support and valid thresholds.
     is_platform_supported()?;
     validate_thresholds(start, stop)?;
@@ -64,7 +65,7 @@ pub fn set_thresholds(start: u8, stop: u8, battery: Option<String>) -> Result<()
 }
 
 // Sets the start and stop battery charge thresholds in sysfs.
-pub fn get_thresholds(battery: Option<String>) -> Result<(), Error> {
+pub fn get_thresholds(battery: Option<OsString>) -> Result<(), Error> {
     // Generic check for platform support and valid thresholds.
     is_platform_supported()?;
 
@@ -75,8 +76,7 @@ pub fn get_thresholds(battery: Option<String>) -> Result<(), Error> {
     let start = read_threshold(sysfs_bat.join(THRESHOLD_START))?;
     let stop = read_threshold(sysfs_bat.join(THRESHOLD_STOP))?;
 
-    println!("Start: {start}, Stop: {stop}");
-
+    println!("Current charge thresholds: start: {start}%, stop: {stop}%");
     Ok(())
 }
 
@@ -115,7 +115,6 @@ pub fn read_threshold(path: PathBuf) -> Result<String, Error> {
 
     let mut buf = String::new();
     f.read_to_string(&mut buf).map_err(Error::IO)?;
-
     Ok(buf)
 }
 

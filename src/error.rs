@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::fmt;
 use std::io::ErrorKind;
 
@@ -6,7 +7,7 @@ use crate::sysfs;
 // Wrapped operation errors.
 #[derive(Debug)]
 pub enum Error {
-    Battery(String),
+    Battery(OsString),
     IO(std::io::Error),
     Unsupported,
     Threshold,
@@ -15,7 +16,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description: String = match self {
-            Error::Battery(bat) => format!("battery not found: {bat}"),
+            Error::Battery(bat) => format!("battery not found: {:?}", bat),
             Error::IO(err) => {
                 match err.kind() {
                     // Usually fixed by running sudo.
@@ -27,8 +28,8 @@ impl fmt::Display for Error {
                     // _should_ exist.
                     ErrorKind::NotFound => {
                         format!(
-                            "battery thresholds not found - do they exist? `{}`",
-                            sysfs::SYSFS_CLASS_POWER
+                            "battery thresholds not found - do they exist? `{:?}`",
+                            sysfs::CLASS_POWER_SUPPLY
                         )
                     }
                     // Generic catch-all error.
