@@ -9,12 +9,12 @@ use crate::error::Error;
 // REF: https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
 pub const CLASS_POWER_SUPPLY: &str = "/sys/class/power_supply/";
 
-// Default inbuilt batter indicator.
-const DEFAULT_BATTERY: &str = "BAT0";
-
 // Start and stop threshold sysfs files.
 pub const THRESHOLD_START: &str = "charge_control_start_threshold";
 pub const THRESHOLD_STOP: &str = "charge_control_end_threshold";
+
+// Default inbuilt batter indicator.
+const DEFAULT_BATTERY: &str = "BAT0";
 
 // General check to determine if the current OS is supported.
 // TODO: could this be better?
@@ -64,7 +64,7 @@ pub fn set_thresholds(start: u8, stop: u8, battery: Option<OsString>) -> Result<
     Ok(())
 }
 
-// Sets the start and stop battery charge thresholds in sysfs.
+// Gets the start and stop battery charge thresholds from sysfs.
 pub fn get_thresholds(battery: Option<OsString>) -> Result<(), Error> {
     // Generic check for platform support and valid thresholds.
     is_platform_supported()?;
@@ -91,7 +91,7 @@ pub fn validate_thresholds(start: u8, stop: u8) -> Result<(), Error> {
     Ok(())
 }
 
-// Attempts to write a charge threshold value to a given path.
+// Attempts to write a charge threshold value.
 pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
     // Attempt to open the file in write mode while truncating any existing data.
     // This will fail if the file does not already exist.
@@ -106,6 +106,7 @@ pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
     Ok(())
 }
 
+// Attempts to read a charge threshold value.
 pub fn read_threshold(path: PathBuf) -> Result<String, Error> {
     let mut f = OpenOptions::new()
         .write(false)
