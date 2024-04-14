@@ -15,14 +15,14 @@ pub struct Chargectl {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Set threshold to enable immediate charging until full
+    Full(Battery),
+
     /// Get the current start and stop thresholds for a given battery
     Get(Battery),
 
     /// Set start and stop charge thresholds for a given battery
     Set(Thresholds),
-
-    /// Set threshold to enable immediate charging until full
-    Full(Battery),
 
     /// Run as a dameon, periodically resetting charge thresholds
     Start(Thresholds),
@@ -51,9 +51,9 @@ struct Battery {
 impl Chargectl {
     pub fn run(self) -> Result<(), Error> {
         match self.command {
+            Commands::Full(args) => sysfs::set_thresholds(96, 100, args.battery),
             Commands::Get(args) => sysfs::get_thresholds(args.battery),
             Commands::Set(args) => sysfs::set_thresholds(args.start, args.stop, args.battery),
-            Commands::Full(args) => sysfs::set_thresholds(96, 100, args.battery),
             Commands::Start(args) => daemon::start(args.start, args.stop, args.battery),
         }
     }

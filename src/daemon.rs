@@ -22,10 +22,9 @@ pub fn start(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), Error
     let sysfs_bat = sysfs::get_battery_path(battery)?;
 
     loop {
-        // Sleep until the next cycle.
+        // Sleep until the next cycle, or break if we received a stop signal.
         // TODO: make this interval customizable.
         if recv.recv_timeout(Duration::from_secs(30)).is_ok() {
-            // Sleep was interrupted
             break;
         }
 
