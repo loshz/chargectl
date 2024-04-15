@@ -26,6 +26,17 @@ pub fn is_platform_supported() -> Result<(), Error> {
     Ok(())
 }
 
+// Check sysfs to see if AC power is online.
+pub fn is_ac_power_online() -> Result<(), Error> {
+    let sysfs_ac = Path::new(CLASS_POWER_SUPPLY).join("AC/online");
+    let online = read_threshold(sysfs_ac)?;
+    if online == 0 {
+        return Err(Error::AC);
+    }
+
+    Ok(())
+}
+
 // Construct a sysfs path for a given battery.
 pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, Error> {
     // Set battery default if not specified.
@@ -44,8 +55,9 @@ pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, Error> {
 
 // Sets the start and stop battery charge thresholds in sysfs.
 pub fn set_thresholds(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), Error> {
-    // Generic check for platform support and valid thresholds.
+    // Generic check for platform support, AC power and valid thresholds.
     is_platform_supported()?;
+    is_ac_power_online()?;
     validate_thresholds(start, stop)?;
 
     // Get sysfs path from given battery.
@@ -89,7 +101,7 @@ pub fn get_thresholds(battery: Option<OsString>) -> Result<(), Error> {
 pub fn validate_thresholds(start: u8, stop: u8) -> Result<(), Error> {
     // Simple sanity check for valid threshold values.
     // The kernel will also enforce these values, but it's a simple check for us to do.
-    if start > 100 || stop > 100 || start >= stop {
+    if start == 0 || stop == 0 || start > 100 || stop > 100 || start >= stop {
         return Err(Error::Threshold);
     }
 
@@ -136,6 +148,10 @@ mod tests {
 
     #[test]
     fn test_validate_thresholds() {
+        // Start == 0
+        assert!(validate_thresholds(0, 100).is_err(), "start == 0");
+        // Stop == 0
+        assert!(validate_thresholds(75, 0).is_err(), "stop == 0");
         // Start > 100
         assert!(validate_thresholds(101, 100).is_err(), "start > 100");
         // Stop > 100

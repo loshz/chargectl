@@ -7,6 +7,7 @@ use crate::sysfs;
 // Wrapped operation errors.
 #[derive(Debug)]
 pub enum Error {
+    AC,
     Battery(OsString),
     IO(std::io::Error),
     Unsupported,
@@ -16,6 +17,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description: String = match self {
+            Error::AC => "AC power is not connected".to_string(),
             Error::Battery(bat) => format!("battery not found: {:?}", bat),
             Error::IO(err) => {
                 match err.kind() {
@@ -38,7 +40,7 @@ impl fmt::Display for Error {
             }
             Error::Unsupported => "unsupported platform".to_string(),
             Error::Threshold => {
-                "thresholds must be numerical [0-100], and start < stop".to_string()
+                "thresholds must be numerical [1-100], and start < stop".to_string()
             }
         };
         f.write_str(description.as_str())
