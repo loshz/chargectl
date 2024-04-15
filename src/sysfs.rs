@@ -26,7 +26,7 @@ pub fn is_platform_supported() -> Result<(), Error> {
     Ok(())
 }
 
-// Construct a sysfs path from a given battery.
+// Construct a sysfs path for a given battery.
 pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, Error> {
     // Set battery default if not specified.
     let bat: OsString = match battery {
@@ -76,7 +76,12 @@ pub fn get_thresholds(battery: Option<OsString>) -> Result<(), Error> {
     let start = read_threshold(sysfs_bat.join(THRESHOLD_START))?;
     let stop = read_threshold(sysfs_bat.join(THRESHOLD_STOP))?;
 
-    println!("Current charge thresholds: start: {start}%, stop: {stop}%");
+    if start == 0 {
+        println!("Battery will start charging immediately and stop charing at {stop}%");
+    } else {
+        println!("Battery will start charging below {start}% and stop charing at {stop}%");
+    };
+
     Ok(())
 }
 
@@ -107,16 +112,22 @@ pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
 }
 
 // Attempts to read a charge threshold value.
-pub fn read_threshold(path: PathBuf) -> Result<String, Error> {
+pub fn read_threshold(path: PathBuf) -> Result<u8, Error> {
     let mut f = OpenOptions::new()
         .write(false)
         .read(true)
         .open(path)
         .map_err(Error::IO)?;
 
+    // Read threshold into buffer and strip newlines.
     let mut buf = String::new();
     f.read_to_string(&mut buf).map_err(Error::IO)?;
-    Ok(buf)
+    buf = buf.trim().to_owned();
+
+    // Attempt to parse threshold value.
+    // If the OS returns an unparsable value, we should treat this as fatal.
+    let threshold = buf.parse::<u8>().unwrap();
+    Ok(threshold)
 }
 
 #[cfg(test)]
