@@ -10,6 +10,9 @@ pub fn start(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), Error
     sysfs::is_platform_supported()?;
     sysfs::validate_thresholds(start, stop)?;
 
+    // Get sysfs path from given battery.
+    let sysfs_bat = sysfs::get_battery_path(battery)?;
+
     // Register stop handler.
     let (send, recv) = mpsc::channel();
     ctrlc::set_handler(move || {
@@ -18,11 +21,10 @@ pub fn start(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), Error
     })
     .unwrap();
 
-    // Get sysfs path from given battery.
-    let sysfs_bat = sysfs::get_battery_path(battery)?;
-    println!("Starting charge threshold daemon");
-    // println!("Will attempt to periodically set charge thresholds for {}");
-
+    println!(
+        "Attempting to periodically set charge thresholds for {}, start: {start}, stop: {stop}",
+        sysfs_bat.iter().last().unwrap().to_str().unwrap()
+    );
     loop {
         // Sleep until the next cycle, or break if we received a stop signal.
         // TODO: make this interval customizable.

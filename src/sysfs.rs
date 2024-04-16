@@ -64,10 +64,18 @@ pub fn set_thresholds(start: u8, stop: u8, battery: Option<OsString>) -> Result<
     let sysfs_bat = get_battery_path(battery)?;
 
     // Set start and stop thresholds.
-    write_threshold(sysfs_bat.join(THRESHOLD_START), start)?;
-    write_threshold(sysfs_bat.join(THRESHOLD_STOP), stop)?;
+    // If the new start threshold is >= the current stop, we need to set the
+    // new stop threshold first.
+    let curr_stop = read_threshold(sysfs_bat.join(THRESHOLD_STOP))?;
+    if start >= curr_stop {
+        write_threshold(sysfs_bat.join(THRESHOLD_STOP), stop)?;
+        write_threshold(sysfs_bat.join(THRESHOLD_START), start)?;
+    } else {
+        write_threshold(sysfs_bat.join(THRESHOLD_START), start)?;
+        write_threshold(sysfs_bat.join(THRESHOLD_STOP), stop)?;
+    }
 
-    if start == 0 {
+    if start == 1 {
         println!("Battery will start charging immediately and stop charing at {stop}%");
     } else {
         println!("Battery will start charging below {start}% and stop charing at {stop}%");
@@ -88,7 +96,7 @@ pub fn get_thresholds(battery: Option<OsString>) -> Result<(), Error> {
     let start = read_threshold(sysfs_bat.join(THRESHOLD_START))?;
     let stop = read_threshold(sysfs_bat.join(THRESHOLD_STOP))?;
 
-    if start == 0 {
+    if start == 1 {
         println!("Battery will start charging immediately and stop charing at {stop}%");
     } else {
         println!("Battery will start charging below {start}% and stop charing at {stop}%");
