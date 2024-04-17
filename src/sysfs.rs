@@ -127,7 +127,8 @@ pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
         .map_err(Error::IO)?;
 
     // Attempt to write the charge threshold.
-    write!(f, "{}", threshold).map_err(Error::IO)?;
+    f.write_all(threshold.to_string().as_bytes())
+        .map_err(Error::IO)?;
     Ok(())
 }
 
