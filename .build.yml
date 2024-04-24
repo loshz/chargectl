@@ -10,7 +10,7 @@ environment:
   repo: chargectl
 tasks:
 - lint: |
-    ls -al
+    cd $repo
     cargo fmt -- --check
     cargo clippy --tests -- --no-deps -D warnings
 - test: |
