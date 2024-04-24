@@ -2,13 +2,14 @@ image: alpine/latest
 packages:
 - rust
 - rust-clippy
+- cargo
 sources:
 - https://git.sr.ht/~loshz/chargectl
 environment:
   repo: chargectl
 tasks:
 - lint: |
-    cd $repo
+    ls -al
     cargo fmt -- --check
     cargo clippy --tests -- --no-deps -D warnings
 - test: |
