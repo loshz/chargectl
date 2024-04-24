@@ -1,6 +1,7 @@
-image: alpine/latest
+image: alpine/edge
 packages:
 - rust
+- rustfmt
 - rust-clippy
 - cargo
 sources:
