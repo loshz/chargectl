@@ -6,13 +6,14 @@ Linux daemon for managing charge thresholds on modern laptop machines. Inspired 
 ## Usage
 ```
 $ chargectl --help
-Linux daemon for managing charge thresholds on modern laptop machines.
+Daemon for managing charge thresholds on modern Linux machines
 
 Usage: chargectl <COMMAND>
 
 Commands:
-  setcharge   Set start and stop charge thresholds
-  fullcharge  Set threshold to enable immediate charging until full
+  full   Set threshold to enable immediate charging until full
+  get    Get the current start and stop thresholds for a given battery
+  set    Set start and stop charge thresholds for a given battery
 
 Options:
   -h, --help     Print help
