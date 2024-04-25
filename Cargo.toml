@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Dan Bond <danbond@protonmail.com>"]
 edition = "2021"
 rust-version = "1.72"
-description = "Daemon for managing charge thresholds on modern Linux machines"
+description = "Manage charge thresholds on modern Linux machines"
 repository = "https://git.sr.ht/~loshz/chargectl"
 license = "MIT"
 

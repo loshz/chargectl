@@ -14,7 +14,7 @@ pub struct Chargectl {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Set threshold to enable immediate charging until full
+    /// Set thresholds to enable immediate charging until full
     Full(Battery),
 
     /// Get the current start and stop thresholds for a given battery
