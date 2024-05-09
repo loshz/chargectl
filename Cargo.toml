@@ -7,6 +7,9 @@ rust-version = "1.72"
 description = "Manage charge thresholds on modern Linux machines"
 repository = "https://git.sr.ht/~loshz/chargectl"
 license = "MIT"
+keywords = ["cli", "linux", "battery"]
+categories = ["command-line-utilities"]
+include = ["src/*", "Cargo.lock", "Cargo.toml", "LICENSE", "README.md"]
 
 [dependencies]
 clap = { version = "4.5", default-features = false, features = ["std", "derive", "help", "usage", "error-context"] }
