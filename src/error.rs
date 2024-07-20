@@ -6,7 +6,7 @@ use crate::sysfs;
 
 // Wrapped operation errors.
 #[derive(Debug)]
-pub enum Error {
+pub enum ChargeError {
     AC,
     Battery(OsString),
     IO(std::io::Error),
@@ -14,12 +14,12 @@ pub enum Error {
     Threshold,
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for ChargeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description: String = match self {
-            Error::AC => "AC power is not connected".to_string(),
-            Error::Battery(bat) => format!("battery not found: {:?}", bat),
-            Error::IO(err) => {
+            ChargeError::AC => "AC power is not connected".to_string(),
+            ChargeError::Battery(bat) => format!("battery not found: {:?}", bat),
+            ChargeError::IO(err) => {
                 match err.kind() {
                     // Usually fixed by running sudo.
                     ErrorKind::PermissionDenied => {
@@ -30,7 +30,7 @@ impl fmt::Display for Error {
                     // _should_ exist.
                     ErrorKind::NotFound => {
                         format!(
-                            "battery thresholds not found - do they exist? `{:?}`",
+                            "battery thresholds not found {:?}",
                             sysfs::CLASS_POWER_SUPPLY
                         )
                     }
@@ -38,8 +38,8 @@ impl fmt::Display for Error {
                     _ => format!("failed to write charge threshold: {err}"),
                 }
             }
-            Error::Unsupported => "unsupported platform".to_string(),
-            Error::Threshold => {
+            ChargeError::Unsupported => "unsupported platform".to_string(),
+            ChargeError::Threshold => {
                 "thresholds must be numerical [1-100], and start < stop".to_string()
             }
         };
@@ -47,4 +47,4 @@ impl fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for ChargeError {}

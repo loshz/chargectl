@@ -3,7 +3,7 @@ use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use crate::error::Error;
+use crate::error::ChargeError;
 
 // Class used to represent power supply in sysfs.
 // REF: https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
@@ -18,27 +18,27 @@ const DEFAULT_BATTERY: &str = "BAT0";
 
 // General check to determine if the current OS is supported.
 // TODO: could this be better?
-pub fn is_platform_supported() -> Result<(), Error> {
+pub fn is_platform_supported() -> Result<(), ChargeError> {
     if !Path::new(CLASS_POWER_SUPPLY).exists() {
-        return Err(Error::Unsupported);
+        return Err(ChargeError::Unsupported);
     }
 
     Ok(())
 }
 
 // Check sysfs to see if AC power is online.
-pub fn is_ac_power_online() -> Result<(), Error> {
+pub fn is_ac_power_online() -> Result<(), ChargeError> {
     let sysfs_ac = Path::new(CLASS_POWER_SUPPLY).join("AC/online");
     let online = read_threshold(sysfs_ac)?;
     if online == 0 {
-        return Err(Error::AC);
+        return Err(ChargeError::AC);
     }
 
     Ok(())
 }
 
 // Construct a sysfs path for a given battery.
-pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, Error> {
+pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, ChargeError> {
     // Set battery default if not specified.
     let bat: OsString = match battery {
         Some(b) => b.to_ascii_uppercase(),
@@ -47,14 +47,14 @@ pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, Error> {
 
     let sysfs_bat = Path::new(CLASS_POWER_SUPPLY).join(bat.clone());
     if !sysfs_bat.exists() {
-        return Err(Error::Battery(bat));
+        return Err(ChargeError::Battery(bat));
     }
 
     Ok(sysfs_bat)
 }
 
 // Sets the start and stop battery charge thresholds in sysfs.
-pub fn set_thresholds(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), Error> {
+pub fn set_thresholds(start: u8, stop: u8, battery: Option<OsString>) -> Result<(), ChargeError> {
     // Generic check for platform support, AC power and valid thresholds.
     is_platform_supported()?;
     validate_thresholds(start, stop)?;
@@ -83,7 +83,7 @@ pub fn set_thresholds(start: u8, stop: u8, battery: Option<OsString>) -> Result<
 }
 
 // Gets the start and stop battery charge thresholds from sysfs.
-pub fn get_thresholds(battery: Option<OsString>) -> Result<(), Error> {
+pub fn get_thresholds(battery: Option<OsString>) -> Result<(), ChargeError> {
     // Generic check for platform support and valid thresholds.
     is_platform_supported()?;
 
@@ -103,43 +103,43 @@ pub fn get_thresholds(battery: Option<OsString>) -> Result<(), Error> {
 }
 
 // General validation to check start and stop charge thresholds.
-pub fn validate_thresholds(start: u8, stop: u8) -> Result<(), Error> {
+pub fn validate_thresholds(start: u8, stop: u8) -> Result<(), ChargeError> {
     // Simple sanity check for valid threshold values.
     // The kernel will also enforce these values, but it's a simple check for us to do.
     if start == 0 || stop == 0 || start > 100 || stop > 100 || start >= stop {
-        return Err(Error::Threshold);
+        return Err(ChargeError::Threshold);
     }
 
     Ok(())
 }
 
 // Attempts to write a charge threshold value.
-pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), Error> {
+pub fn write_threshold(path: PathBuf, threshold: u8) -> Result<(), ChargeError> {
     // Attempt to open the file in write mode while truncating any existing data.
     // This will fail if the file does not already exist.
     let mut f = OpenOptions::new()
         .write(true)
         .truncate(true)
         .open(path)
-        .map_err(Error::IO)?;
+        .map_err(ChargeError::IO)?;
 
     // Attempt to write the charge threshold.
     f.write_all(threshold.to_string().as_bytes())
-        .map_err(Error::IO)?;
+        .map_err(ChargeError::IO)?;
     Ok(())
 }
 
 // Attempts to read a charge threshold value.
-pub fn read_threshold(path: PathBuf) -> Result<u8, Error> {
+pub fn read_threshold(path: PathBuf) -> Result<u8, ChargeError> {
     let mut f = OpenOptions::new()
         .write(false)
         .read(true)
         .open(path)
-        .map_err(Error::IO)?;
+        .map_err(ChargeError::IO)?;
 
     // Read threshold into buffer and strip newlines.
     let mut buf = String::new();
-    f.read_to_string(&mut buf).map_err(Error::IO)?;
+    f.read_to_string(&mut buf).map_err(ChargeError::IO)?;
 
     // Attempt to parse threshold value.
     // If the OS returns an unparsable value, we should treat this as fatal.

@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use clap::{Args, Parser, Subcommand};
 
-use crate::error::Error;
+use crate::error::ChargeError;
 use crate::sysfs;
 
 #[derive(Parser)]
@@ -45,7 +45,7 @@ struct Battery {
 }
 
 impl Chargectl {
-    pub fn run(self) -> Result<(), Error> {
+    pub fn run(self) -> Result<(), ChargeError> {
         match self.command {
             Commands::Full(args) => {
                 sysfs::is_ac_power_online()?;

@@ -1,4 +1,4 @@
-use std::process;
+use std::process::ExitCode;
 
 use clap::Parser;
 
@@ -6,11 +6,10 @@ mod cli;
 mod error;
 mod sysfs;
 
-fn main() {
-    let cli = cli::Chargectl::parse();
-
-    if let Err(e) = cli.run() {
+fn main() -> ExitCode {
+    if let Err(e) = cli::Chargectl::parse().run() {
         eprintln!("Error: {e}");
-        process::exit(1);
+        return ExitCode::FAILURE;
     }
+    ExitCode::SUCCESS
 }
