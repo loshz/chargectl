@@ -26,26 +26,14 @@ pub fn is_platform_supported() -> Result<(), ChargeError> {
     Ok(())
 }
 
-// Check sysfs to see if AC power is online.
-pub fn is_ac_power_online() -> Result<(), ChargeError> {
-    let sysfs_ac = Path::new(CLASS_POWER_SUPPLY).join("AC/online");
-    let online = read_threshold(sysfs_ac)?;
-    if online == 0 {
-        return Err(ChargeError::AC);
-    }
-
-    Ok(())
-}
-
 // Construct a sysfs path for a given battery.
 pub fn get_battery_path(battery: Option<OsString>) -> Result<PathBuf, ChargeError> {
     // Set battery default if not specified.
-    let bat: OsString = match battery {
-        Some(b) => b.to_ascii_uppercase(),
-        None => DEFAULT_BATTERY.into(),
-    };
+    let bat: OsString = battery
+        .unwrap_or(DEFAULT_BATTERY.into())
+        .to_ascii_uppercase();
 
-    let sysfs_bat = Path::new(CLASS_POWER_SUPPLY).join(bat.clone());
+    let sysfs_bat = Path::new(CLASS_POWER_SUPPLY).join(&bat);
     if !sysfs_bat.exists() {
         return Err(ChargeError::Battery(bat));
     }
@@ -149,7 +137,7 @@ pub fn read_threshold(path: PathBuf) -> Result<u8, ChargeError> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::validate_thresholds;
 
     #[test]
     fn test_validate_thresholds() {

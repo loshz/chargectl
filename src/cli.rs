@@ -17,7 +17,7 @@ enum Commands {
     /// Set thresholds to enable immediate charging until full
     Full(Battery),
 
-    /// Get the current start and stop thresholds for a given battery
+    /// Get current start and stop thresholds for a given battery
     Get(Battery),
 
     /// Set start and stop charge thresholds for a given battery
@@ -47,10 +47,7 @@ struct Battery {
 impl Chargectl {
     pub fn run(self) -> Result<(), ChargeError> {
         match self.command {
-            Commands::Full(args) => {
-                sysfs::is_ac_power_online()?;
-                sysfs::set_thresholds(96, 100, args.battery)
-            }
+            Commands::Full(args) => sysfs::set_thresholds(96, 100, args.battery),
             Commands::Get(args) => sysfs::get_thresholds(args.battery),
             Commands::Set(args) => sysfs::set_thresholds(args.start, args.stop, args.battery),
         }
