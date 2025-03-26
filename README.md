@@ -1,5 +1,5 @@
 # chargectl
-[![builds.sr.ht status](https://builds.sr.ht/~loshz/chargectl.svg)](https://builds.sr.ht/~loshz/chargectl?) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Build Status](https://github.com/loshz/chargectl/workflows/ci/badge.svg)](https://github.com/loshz/chargectl/actions) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 CLI for managing charge thresholds on modern Linux machines. Inspired by [TLP](https://linrunner.de/tlp/).
 
